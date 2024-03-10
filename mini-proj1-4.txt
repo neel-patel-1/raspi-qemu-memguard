@@ -1,0 +1,79 @@
+n869p538@bristol:memguard$ latency -c 0
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 5752057 us
+average 219.42 ns | bandwidth 291.67 MB (278.16 MiB)/s
+readsum  3435960729600
+n869p538@bristol:memguard$ for c in 1 2 3; do bandwidth -c $c -t 1000 & done
+[1] 337775
+[2] 337776
+[3] 337777
+n869p538@bristol:memguard$ assigned to cpu 1
+assigned to cpu 2
+assigned to cpu 3
+memsize=16384 KB, type=read, cpuid=2
+memsize=16384 KB, type=read, cpuid=1
+stop at 1000
+stop at 1000
+memsize=16384 KB, type=read, cpuid=3
+stop at 1000
+
+n869p538@bristol:memguard$ sudo cat /sys/kernel/debug/memguard/read_limit
+cpu  |budget (MB/s)      RT?
+-------------------------------
+CPU0: 16384 (1000MB/s)   No
+CPU1: 1638 (100MB/s)     No
+CPU2: 1638 (100MB/s)     No
+CPU3: 1638 (100MB/s)     No
+n869p538@bristol:memguard$ for c in 1 2 3; do bandwidth -c $c -t 1000 & done
+[1] 338142
+[2] 338143
+[3] 338144
+assigned to cpu 1
+n869p538@bristol:memguard$ assigned to cpu 2
+assigned to cpu 3
+memsize=16384 KB, type=read, cpuid=1
+stop at 1000
+memsize=16384 KB, type=read, cpuid=2
+stop at 1000
+memsize=16384 KB, type=read, cpuid=3
+stop at 1000
+
+n869p538@bristol:memguard$ latency -c 0 ; killall -9 bandwidth
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 5707797 us
+average 217.74 ns | bandwidth 293.94 MB (280.32 MiB)/s
+readsum  3435960729600
+n869p538@bristol:memguard$ [1]   Killed                  bandwidth -c $c -t 1000
+[2]-  Killed                  bandwidth -c $c -t 1000
+[3]+  Killed                  bandwidth -c $c -t 1000
+
+n869p538@bristol:memguard$ for c in 1 2 3; do bandwidth -a write -c $c -t 1000 & done
+[1] 338062
+[2] 338063
+[3] 338064
+n869p538@bristol:memguard$ assigned to cpu 3
+assigned to cpu 2
+assigned to cpu 1
+memsize=16384 KB, type=write, cpuid=2
+stop at 1000
+memsize=16384 KB, type=write, cpuid=3
+stop at 1000
+memsize=16384 KB, type=write, cpuid=1
+stop at 1000
+
+n869p538@bristol:memguard$ latency -c 0 ; killall -9 bandwidth
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 6113200 us
+average 233.20 ns | bandwidth 274.44 MB (261.73 MiB)/s
+readsum  3435960729600
+n869p538@bristol:memguard$ [2]-  Killed                  bandwidth -a write -c $c -t 1000
+[3]+  Killed                  bandwidth -a write -c $c -t 1000
+[1]   Killed                  bandwidth -a write -c $c -t 1000
+
+n869p538@bristol:memguard$

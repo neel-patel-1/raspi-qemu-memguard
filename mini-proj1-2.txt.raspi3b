@@ -1,0 +1,55 @@
+pi@raspberrypi:~/IsolBench/bench$ latency -c 0
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 4980853 us
+average 190.00 ns | bandwidth 336.83 MB (321.23 MiB)/s
+readsum  3435960729600                                                                                            for c in 1 2 3; do bandwidth -c $c -t 1000 & done
+[1] 826berrypi:~/IsolBench/bench$ for c in 1 2 3; do bandwidth -c $c -t 1000 & done
+[2] 827
+[3] 828
+pi@raspberrypi:~/IsolBench/bench$ assigned to cpu 2
+assigned to cpu 1
+assigned to cpu 3
+memsize=16384 KB, type=read, cpuid=1
+stop at 1000
+memsize=16384 KB, type=read, cpuid=2
+stop at 1000
+memsize=16384 KB, type=read, cpuid=3
+stop at 1000
+
+pi@raspberrypi:~/IsolBench/bench$ latency -c 0
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 7198294 us
+average 274.59 ns | bandwidth 233.07 MB (222.27 MiB)/s
+readsum  3435960729600
+pi@raspberrypi:~/IsolBench/bench$ killall -9 bandwidth
+pi@raspberrypi:~/IsolBench/bench$
+[1]   Killed                  bandwidth -c $c -t 1000
+[2]-  Killed                  bandwidth -c $c -t 1000
+[3]+  Killed                  bandwidth -c $c -t 1000                                                             for c in 1 2 3; do bandwidth -a write -c $c -t 1000 & done
+[1] 831berrypi:~/IsolBench/bench$ for c in 1 2 3; do bandwidth -a write -c $c -t 1000 & done
+[2] 832
+[3] 833
+pi@raspberrypi:~/IsolBench/bench$ assigned to cpu 1
+assigned to cpu 2
+assigned to cpu 3
+memsize=16384 KB, type=write, cpuid=1
+stop at 1000
+memsize=16384 KB, type=write, cpuid=2
+stop at 1000
+memsize=16384 KB, type=write, cpuid=3
+stop at 1000
+
+pi@raspberrypi:~/IsolBench/bench$ latency -c 0 ; killall -9 bandwidth
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 13423716 us
+average 512.07 ns | bandwidth 124.98 MB (119.19 MiB)/s
+readsum  3435960729600
+[1]   Killed                  bandwidth -a write -c $c -t 1000
+[2]-  Killed                  bandwidth -a write -c $c -t 1000
+[3]+  Killed                  bandwidth -a write -c $c -t 1000

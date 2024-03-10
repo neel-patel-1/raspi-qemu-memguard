@@ -1,0 +1,6 @@
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Mar 10 03:06:24 GMT 2024 on tty1
+upi@raspberrypi:~$ uname -a
+Linux raspberrypi 5.4.83-v8+ #1 SMP PREEMPT Sat Mar 9 20:03:29 CST 2024 aarch64 GNU/Linux
+pi@raspberrypi:~$

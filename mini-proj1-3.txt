@@ -1,0 +1,25 @@
+n869p538@bristol:memguard$ echo mb 1000 100 100 100 | sudo tee /sys/kernel/debug/memguard/read_limit
+mb 1000 100 100 100
+n869p538@bristol:memguard$ sudo !!
+sudo cat /sys/kernel/debug/memguard/read_limit
+cpu  |budget (MB/s)      RT?
+-------------------------------
+CPU0: 16384 (1000MB/s)   No
+CPU1: 1638 (100MB/s)     No
+CPU2: 1638 (100MB/s)     No
+CPU3: 1638 (100MB/s)     No
+n869p538@bristol:memguard$ bandwidth -c 3
+assigned to cpu 3
+memsize=16384 KB, type=read, cpuid=3
+stop at 5
+g_nread(bytes read) = 3405774848
+elapsed = 5.00 sec ( 5000294 usec )
+CPU3: B/W = 649.56 MB/s | CPU3: average = 93.96 ns
+n869p538@bristol:memguard$ bandwidth -c 0
+assigned to cpu 0
+memsize=16384 KB, type=read, cpuid=0
+stop at 5
+g_nread(bytes read) = 5217714176
+elapsed = 5.00 sec ( 5000754 usec )
+CPU0: B/W = 995.05 MB/s | CPU0: average = 61.34 ns
+n869p538@bristol:memguard$

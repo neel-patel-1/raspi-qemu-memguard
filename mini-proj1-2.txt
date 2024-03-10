@@ -1,0 +1,133 @@
+-bash: /home/n869p538/anaconda3/etc/profile.d/conda.sh: No such file or directory
+n869p538@bristol:memguard$ git log
+commit 8dd64eb1f7716c20980c762b9d522c234249598e (HEAD -> main)
+Author: Neel Patel <n869p538@york.ittc.ku.edu>
+Date:   Sun Mar 10 14:25:07 2024 -0500
+
+    module
+
+commit 0aecc149e38eefdb39131a8fe502d6ee987eb444
+n869p538@bristol:memguard$ git remote add origin git@github.com:neel-patel-1/raspi-qemu-memguard.git
+n869p538@bristol:memguard$ git push -u origin main
+Enumerating objects: 24, done.
+Counting objects: 100% (24/24), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (24/24), done.
+Writing objects: 100% (24/24), 18.14 KiB | 3.63 MiB/s, done.
+Total 24 (delta 5), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (5/5), done.
+To github.com:neel-patel-1/raspi-qemu-memguard.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
+n869p538@bristol:memguard$ mv pane.log insmod_memguard.ko
+n869p538@bristol:memguard$ pwd
+/home/n869p538/memguard
+n869p538@bristol:memguard$ mv insmod_memguard.ko insmod_memguard.log
+n869p538@bristol:memguard$ mv pane.log insmod_memguard.log
+mv: overwrite 'insmod_memguard.log'? y
+n869p538@bristol:memguard$ mv pane.log read_limit.log
+n869p538@bristol:memguard$ mv pane.log read_limit.log
+mv: overwrite 'read_limit.log'? y
+n869p538@bristol:memguard$ mv pane.log inflated_membw_in_vm.log
+n869p538@bristol:memguard$ git add README
+n869p538@bristol:memguard$ mv pane.log exps_3_10.log
+n869p538@bristol:memguard$ ls /mnt/image/
+n869p538@bristol:memguard$ ls /mnt/rasp-root/
+n869p538@bristol:memguard$ make -j
+make: *** No targets specified and no makefile found.  Stop.
+n869p538@bristol:memguard$ ls
+2023-05-03-raspios-bullseye-arm64.img      Image.gz                    memguard.ko
+2023-05-03-raspios-bullseye-arm64.img.bak  inflated_membw_in_vm.log    mini-proj1-1.txt
+bcm2710-rpi-3-b-plus.dtb                   insmod_memguard.log         mini-proj1-2.txt
+castor_cross_compile_issues                kernel8.img                 qemu-raspi3b.sh
+dts                                        lib                         read_limit.log
+exps_3_10.log                              memguard                    README
+Image                                      memguard_compile_proof.log  rpi4-bcm2711-dtsi.patch
+n869p538@bristol:memguard$ cd memguard
+n869p538@bristol:memguard$ make
+make -C /lib/modules/6.2.0-39-generic/build M=/home/n869p538/memguard/memguard modules
+make[1]: Entering directory '/usr/src/linux-headers-6.2.0-39-generic'
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: x86_64-linux-gnu-gcc-12 (Ubuntu 12.3.0-1ubuntu1~23.04) 12.3.0
+  You are using:           gcc-12 (Ubuntu 12.3.0-1ubuntu1~23.04) 12.3.0
+make[1]: Leaving directory '/usr/src/linux-headers-6.2.0-39-generic'
+n869p538@bristol:memguard$ cd ../
+n869p538@bristol:memguard$ git clone https://github.com/CSL-KU/IsolBench
+Cloning into 'IsolBench'...
+remote: Enumerating objects: 445, done.
+remote: Counting objects: 100% (181/181), done.
+remote: Compressing objects: 100% (123/123), done.
+remote: Total 445 (delta 91), reused 137 (delta 57), pack-reused 264
+Receiving objects: 100% (445/445), 325.72 KiB | 3.50 MiB/s, done.
+Resolving deltas: 100% (221/221), done.
+n869p538@bristol:memguard$ cd IsolBench/
+n869p538@bristol:IsolBench$ ls
+bench  patches  README.md  scripts
+n869p538@bristol:IsolBench$ cd bench/
+n869p538@bristol:bench$ make latency
+gcc -O2 -Wall -g   -c -o latency.o latency.c
+gcc -Wl,--no-as-needed -lrt  latency.o   -o latency
+n869p538@bristol:bench$ make bandwidth
+gcc -O2 -Wall -g   -c -o bandwidth.o bandwidth.c
+gcc -Wl,--no-as-needed -lrt  bandwidth.o   -o bandwidth
+n869p538@bristol:bench$ sudo cp latency bandwidth /usr/local/bin/
+[sudo] password for n869p538:
+n869p538@bristol:bench$ latency -c 0
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 1839752 us
+average 70.18 ns | bandwidth 911.93 MB (869.68 MiB)/s
+readsum  3435960729600
+n869p538@bristol:bench$ for c in 1 2 3; do bandwidth -c $c -t 1000 & done
+[1] 335544
+[2] 335545
+[3] 335546
+n869p538@bristol:bench$ assigned to cpu 2
+assigned to cpu 1
+assigned to cpu 3
+memsize=16384 KB, type=read, cpuid=2
+stop at 1000
+memsize=16384 KB, type=read, cpuid=1
+stop at 1000
+memsize=16384 KB, type=read, cpuid=3
+stop at 1000
+
+n869p538@bristol:bench$ latency -c 0
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 4323194 us
+average 164.92 ns | bandwidth 388.07 MB (370.10 MiB)/s
+readsum  3435960729600
+n869p538@bristol:bench$ killall -9 bandwidth
+n869p538@bristol:bench$ [2]-  Killed                  bandwidth -c $c -t 1000
+[3]+  Killed                  bandwidth -c $c -t 1000
+[1]   Killed                  bandwidth -c $c -t 1000
+
+n869p538@bristol:bench$ for c in 1 2 3; do bandwidth -a write -c $c -t 1000 & done
+[1] 335551
+[2] 335552
+[3] 335553
+n869p538@bristol:bench$ assigned to cpu 1
+assigned to cpu 3
+assigned to cpu 2
+memsize=16384 KB, type=write, cpuid=1
+stop at 1000
+memsize=16384 KB, type=write, cpuid=2
+stop at 1000
+memsize=16384 KB, type=write, cpuid=3
+stop at 1000
+
+n869p538@bristol:bench$ latency -c 0 ; killall -9 bandwidth
+assigned to cpu 0
+allocated: wokingsetsize=262144 entries
+initialized.
+duration 6988817 us
+average 266.60 ns | bandwidth 240.06 MB (228.94 MiB)/s
+readsum  3435960729600
+n869p538@bristol:bench$ [2]-  Killed                  bandwidth -a write -c $c -t 1000
+[1]   Killed                  bandwidth -a write -c $c -t 1000
+[3]+  Killed                  bandwidth -a write -c $c -t 1000
+
+n869p538@bristol:bench$

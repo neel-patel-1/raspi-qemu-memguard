@@ -1,0 +1,23 @@
+cho mb 1000 100 100 100 > read_limitemguard# echo mb 1000 100 100 100 > read_limit
+root@raspberrypi:/sys/kernel/debug/memguard# cat read_limit
+cpu  |budget (MB/s)      RT?
+-------------------------------
+CPU0: 16384 (1000MB/s)   No
+CPU1: 1638 (100MB/s)     No
+CPU2: 1638 (100MB/s)     No
+CPU3: 1638 (100MB/s)     No
+root@raspberrypi:/sys/kernel/debug/memguard# bandwidth -c 3
+assigned to cpu 3
+memsize=16384 KB, type=read, cpuid=3
+stop at 5
+g_nread(bytes read) = 19092471808
+elapsed = 5.00 sec ( 5000515 usec )
+CPU3: B/W = 3641.22 MB/s | CPU3: average = 16.76 ns
+root@raspberrypi:/sys/kernel/debug/memguard# bandwidth -c 0
+assigned to cpu 0
+memsize=16384 KB, type=read, cpuid=0
+stop at 5
+g_nread(bytes read) = 27682406400
+elapsed = 5.00 sec ( 5000303 usec )
+CPU0: B/W = 5279.68 MB/s | CPU0: average = 11.56 ns
+root@raspberrypi:/sys/kernel/debug/memguard#
