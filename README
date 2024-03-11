@@ -1,0 +1,100 @@
+```
+xz -d 2023-05-03-raspios-bullseye-arm64.img.zz
+./qemu-raspi3b.sh
+```
+uname: pi
+passwd: pi
+
+# Note:
+no raspberry pi so I emulated a raspberrypi with a cortex-a72 4 cpus and 1GB of RAM with qemu.
+just run: `./qemu-raspi3b.sh`.
+As long as you've got qemu-system-aarch64 on your system, the script should work.
+First two experiments were reproducible.
+Third failed with bandwidth tasks getting much higher than 100MB/s bandiwdth.
+Presumably the L2_Cache_Refill Counter is not implemented as faithful emulation of performance counters would likely reduce performance of the emulator.
+Maybe I should try to add hw_event support for raspi3b cortex-a72 qemu-emulated CPU?
+- Are there any use cases for emulating performance event counters?
+Can memguard provide membw isolation in guest VMs?
+- Presumably, multi-core VMs will get cores on same numa node, likely sharing same cache and memory channels.
+
+Can memguard impose limits on membw from inside the VM?
+
+
+```sh
+n869p538@bristol:memguard$ wget https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2023-05-03/2023-05-03-raspios-bullseye-arm64.img.xz
+n869p538@bristol:memguard$ xz -d 2023-05-03-raspios-bullseye-arm64.img.xz
+243  sudo mkdir /mnt/image
+245  sudo mount -o loop,offset=4194304 ./2023-05-03-raspios-bullseye-arm64.img /mnt/image/
+  247  cp /mnt/image/bcm2710-rpi-3-b-plus.dtb .
+  248  cp /mnt/image/kernel8.img .
+n869p538@bristol:memguard$ openssl passwd -6
+Password:
+Verifying - Password:
+$6$b8M95SDOzWhGOjUG$CXjEvOaRhCa4KTss1eFoOUiEF5LJyf3gOVTY4QAtqJsKJyZooi2iWxl6apnHKtq0eZOzkES4jO67CHU2xstw31
+n869p538@bristol:memguard$ echo 'pi:$6$b8M95SDOzWhGOjUG$CXjEvOaRhCa4KTss1eFoOUiEF5LJyf3gOVTY4QAtqJsKJyZooi2iWxl6apnHKtq0eZOzkES4jO67CHU2xstw31' | sudo tee /mnt/image/userconf
+[sudo] password for n869p538:
+pi:$6$b8M95SDOzWhGOjUG$CXjEvOaRhCa4KTss1eFoOUiEF5LJyf3gOVTY4QAtqJsKJyZooi2iWxl6apnHKtq0eZOzkES4jO67CHU2xstw31
+n869p538@bristol:memguard$ sudo touch /mnt/image/ssh
+n869p538@bristol:memguard$ qemu-img resize ./2023-05-03-raspios-bullseye-arm64.img 8G
+WARNING: Image format was not specified for './2023-05-03-raspios-bullseye-arm64.img' and prob
+ing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on b
+lock 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+Image resized.
+n869p538@bristol:memguard$ ./qemu-arm.sh
+WARNING: Image format was not specified for '2023-05-03-raspios-bullseye-arm64.img' and probin
+g guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on b
+lock 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x410fd034]
+```
+
+# https://unix.stackexchange.com/questions/657882/how-do-i-cross-compile-the-linux-kernel
+
+```sh
+sudo cp -r dts/*.dts /mnt/image/
+n869p538@bristol:memguard$ sudo cp -r dts/overlays/*.
+n869p538@bristol:memguard$ sudo cp -r dts/overlays/*.dtb
+```
+
+# constraining rasppi membw and cache resources (tried to further reduce membw and llc using intel's rdt with no success on lab machine)
+```sh
+n869p538@bristol:memguard$ sudo rdtset -I  -t 'mba_max=1600;l3=0xf;cpu=0-3;' -c 0-3  -p 325817
+ERROR: OS interface selected but not supported
+ERROR: os_cap_init() error 8
+Allocation: Error initializing PQoS library!
+rdtset.c,rdtset_init:579 RDTSET: allocation init failed!
+```
+
+
+# How to pin vcpus to host cpus (haven't figured this out yet -- do we need kvm?)
+https://forum.level1techs.com/t/qemu-virtual-machine-cpu-pinning-how/195733/8
+https://forum.level1techs.com/t/qemu-virtual-machine-cpu-pinning-how/195733/8
+https://forum.level1techs.com/t/cpu-pinning-understanding/159236
+https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF#CPU_pinning
+https://unix.stackexchange.com/questions/587045/convert-libvirt-xml-into-qemu-command-line
+The Raspi SUT:https://www.qemu.org/docs/master/system/arm/raspi.html
+
+### mounting root partition
+n869p538@bristol:memguard$ fdisk -l 2023-05-03-raspios-bullseye-arm64.img
+Disk 2023-05-03-raspios-bullseye-arm64.img: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x3e247b30
+
+Device                                 Boot  Start     End Sectors  Size Id Type
+2023-05-03-raspios-bullseye-arm64.img1        8192  532479  524288  256M  c W95 FAT32 (LBA)
+2023-05-03-raspios-bullseye-arm64.img2      532480 8617983 8085504  3.9G 83 Linux
+sudo mount -o loop,offset=$(( 512 * 532480 )) ./2023-05-03-raspios-bullseye-arm64.img /mnt/image/
+
+https://interrupt.memfault.com/blog/emulating-raspberry-pi-in-qemu
+
+#### Different Modules install path:
+https://lkml.iu.edu/hypermail/linux/kernel/9904.2/0929.html
+
+#### reason to add hw_event support for raspi3b cortex-a72 qemu-emulated CPU?
+https://stackoverflow.com/questions/43564391/how-do-i-use-hardware-performance-counters-in-aarch64-assembly
